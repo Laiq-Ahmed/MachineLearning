@@ -1,0 +1,195 @@
+## Gender Classification Of Names
+### Using Machine Learning To Detect/Predict Gender of Individuals 
++ Sklearn
++ Pandas
++ Text Extraction
+# EDA packages
+import pandas as pd
+import numpy as np
+
+# ML Packages
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction import DictVectorizer
+#from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Load our data
+df = pd.read_csv('names_dataset.csv')
+df.head()
+df.size
+# Data Cleaning
+# Checking for column name consistency
+df.columns
+# Data Types
+df.dtypes
+# Checking for Missing Values
+df.isnull().isnull().sum()
+# Number of Female Names
+df[df.sex == 'F'].size
+# Number of Male Names
+df[df.sex == 'M'].size
+df_names = df
+# Replacing All F and M with 0 and 1 respectively
+df_names.sex.replace({'F':0,'M':1},inplace=True)
+df_names.sex.unique()
+df_names.dtypes
+Xfeatures =df_names['name']
+# Feature Extraction 
+cv = CountVectorizer()
+X = cv.fit_transform(Xfeatures)
+cv.get_feature_names()
+from sklearn.model_selection import train_test_split
+# Features 
+X
+# Labels
+y = df_names.sex
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+# Naive Bayes Classifier
+from sklearn.naive_bayes import MultinomialNB
+clf = MultinomialNB()
+clf.fit(X_train,y_train)
+clf.score(X_test,y_test)
+
+# Accuracy of our Model
+print("Accuracy of Model",clf.score(X_test,y_test)*100,"%")
+# Accuracy of our Model
+print("Accuracy of Model",clf.score(X_train,y_train)*100,"%")
+### Sample Prediction
+# Sample1 Prediction
+sample_name = ["Mary"]
+vect = cv.transform(sample_name).toarray()
+vect
+# Female is 0, Male is 1
+clf.predict(vect)
+# Sample2 Prediction
+sample_name1 = ["Mark"]
+vect1 = cv.transform(sample_name1).toarray()
+clf.predict(vect1)
+# Sample3 Prediction of Russian Names
+sample_name2 = ["Natasha"]
+vect2 = cv.transform(sample_name2).toarray()
+clf.predict(vect2)
+# Sample3 Prediction of Random Names
+sample_name3 = ["Nefertiti","Nasha","Ama","Ayo","Xhavier","Ovetta","Tathiana","Xia","Joseph","Xianliang"]
+vect3 = cv.transform(sample_name3).toarray()
+clf.predict(vect3)
+# A function to do it
+def genderpredictor(a):
+    test_name = [a]
+    vector = cv.transform(test_name).toarray()
+    if clf.predict(vector) == 0:
+        print("Female")
+    else:
+        print("Male")
+    
+genderpredictor("Martha")
+Features fxn
+apply the fxn
+vectorizer
+fit
+transform
+classifier
+fit
+predict
+
+namelist = ["Yaa","Yaw","Femi","Masha"]
+for i in namelist:
+    print(genderpredictor(i))
+### Using a custom function for feature analysis
+# By Analogy most female names ends in 'A' or 'E' or has the sound of 'A'
+def features(name):
+    name = name.lower()
+    return {
+        'first-letter': name[0], # First letter
+        'first2-letters': name[0:2], # First 2 letters
+        'first3-letters': name[0:3], # First 3 letters
+        'last-letter': name[-1],
+        'last2-letters': name[-2:],
+        'last3-letters': name[-3:],
+    }
+# Vectorize the features function
+features = np.vectorize(features)
+print(features(["Anna", "Hannah", "Peter","John","Vladmir","Mohammed"]))
+# Extract the features for the dataset
+df_X = features(df_names['name'])
+df_y = df_names['sex']
+from sklearn.feature_extraction import DictVectorizer
+ 
+corpus = features(["Mike", "Julia"])
+dv = DictVectorizer()
+dv.fit(corpus)
+transformed = dv.transform(corpus)
+print(transformed)
+ 
+dv.get_feature_names()
+# Train Test Split
+dfX_train, dfX_test, dfy_train, dfy_test = train_test_split(df_X, df_y, test_size=0.33, random_state=42)
+dfX_train
+
+dv = DictVectorizer()
+dv.fit_transform(dfX_train)
+
+# Model building Using DecisionTree
+
+from sklearn.tree import DecisionTreeClassifier
+ 
+dclf = DecisionTreeClassifier()
+my_xfeatures =dv.transform(dfX_train)
+dclf.fit(my_xfeatures, dfy_train)
+
+# Build Features and Transform them
+sample_name_eg = ["Alex"]
+transform_dv =dv.transform(features(sample_name_eg))
+
+vect3 = transform_dv.toarray()
+# Predicting Gender of Name
+# Male is 1,female = 0
+dclf.predict(vect3)
+if dclf.predict(vect3) == 0:
+    print("Female")
+else:
+    print("Male")
+# Second Prediction With Nigerian Name
+name_eg1 = ["Chioma"]
+transform_dv =dv.transform(features(name_eg1))
+vect4 = transform_dv.toarray()
+if dclf.predict(vect4) == 0:
+    print("Female")
+else:
+    print("Male")
+# A function to do it
+def genderpredictor1(a):
+    test_name1 = [a]
+    transform_dv =dv.transform(features(test_name1))
+    vector = transform_dv.toarray()
+    if dclf.predict(vector) == 0:
+        print("Female")
+    else:
+        print("Male")
+    
+random_name_list = ["Alex","Alice","Chioma","Vitalic","Clairese","Chan"]
+for n in random_name_list:
+    print(genderpredictor1(n))
+## Accuracy of Models Decision Tree Classifier Works better than Naive Bayes
+# Accuracy on training set
+print(dclf.score(dv.transform(dfX_train), dfy_train)) 
+ 
+# Accuracy on test set
+print(dclf.score(dv.transform(dfX_test), dfy_test))
+### Saving Our Model
+from sklearn.externals import joblib
+decisiontreModel = open("decisiontreemodel.pkl","wb")
+joblib.dump(dclf,decisiontreModel)
+decisiontreModel.close
+#Alternative to Model Saving
+import pickle
+dctreeModel = open("namesdetectormodel.pkl","wb")
+pickle.dump(dclf,dctreeModel)
+dctreeModel.close()
+##### Save Multinomial NB Model
+NaiveBayesModel = open("naivebayesgendermodel.pkl","wb")
+joblib.dump(clf,NaiveBayesModel)
+NaiveBayesModel.close()
+# Thanks
+# By Jesse JCharis
+# Jesus Saves @ JCharisTech
+# J-Secur1ty
